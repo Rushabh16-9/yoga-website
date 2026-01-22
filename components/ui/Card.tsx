@@ -1,7 +1,7 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardProps extends Omit<HTMLMotionProps<"div">, "ref"> {
     children: React.ReactNode;
     variant?: "default" | "glass" | "glow";
     hover?: boolean;
