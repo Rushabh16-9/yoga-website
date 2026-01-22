@@ -1,0 +1,119 @@
+// Database schema for Yofit platform
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  firstName     String?
+  lastName      String?
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  subscription  Subscription?
+  bookings      Booking[]
+  progress      Progress[]
+  
+  @@map("users")
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  plan              String   // starter, pro, elite
+  status            String   // active, canceled, past_due
+  billingCycle      String   // monthly, yearly
+  
+  stripeCustomerId      String?  @unique
+  stripeSubscriptionId  String?  @unique
+  stripePriceId         String?
+  
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  cancelAtPeriodEnd     Boolean  @default(false)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("subscriptions")
+}
+
+model Class {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  instructorName String
+  duration      Int      // in minutes
+  level         String   // beginner, intermediate, advanced, all
+  category      String   // vinyasa, hatha, yin, etc.
+  videoUrl      String
+  thumbnailUrl  String
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  progress      Progress[]
+  
+  @@map("classes")
+}
+
+model Progress {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classId       String
+  class         Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  completed     Boolean  @default(false)
+  completedAt   DateTime?
+  duration      Int      // actual minutes practiced
+  
+  createdAt     DateTime @default(now())
+  
+  @@unique([userId, classId])
+  @@map("progress")
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  instructorName String
+  sessionType   String   // 1-on-1, group, workshop
+  scheduledAt   DateTime
+  duration      Int      // in minutes
+  status        String   // scheduled, completed, canceled
+  notes         String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("bookings")
+}
+
+model PracticeStreak {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  totalMinutes  Int      @default(0)
+  lastPracticeDate DateTime?
+  
+  updatedAt     DateTime @updatedAt
+  
+  @@map("practice_streaks")
+}
