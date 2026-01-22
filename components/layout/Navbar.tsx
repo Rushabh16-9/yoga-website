@@ -25,6 +25,7 @@ const Navbar = () => {
         { href: "/classes", label: "Classes" },
         { href: "/pricing", label: "Pricing" },
         { href: "/blog", label: "Blog" },
+        { href: "/onboarding", label: "Get Plan" },
     ];
 
     return (
@@ -51,8 +52,8 @@ const Navbar = () => {
                                 key={link.href}
                                 href={link.href}
                                 className={`text-sm font-medium transition-colors duration-300 ${pathname === link.href
-                                        ? "text-sage-600 font-semibold"
-                                        : "text-sage-800 hover:text-sage-600"
+                                    ? "text-sage-600 font-semibold"
+                                    : "text-sage-800 hover:text-sage-600"
                                     }`}
                             >
                                 {link.label}
@@ -114,8 +115,8 @@ const Navbar = () => {
                                     href={link.href}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={`block py-2 text-base font-medium transition-colors ${pathname === link.href
-                                            ? "text-sage-600 font-semibold"
-                                            : "text-sage-800 hover:text-sage-600"
+                                        ? "text-sage-600 font-semibold"
+                                        : "text-sage-800 hover:text-sage-600"
                                         }`}
                                 >
                                     {link.label}
