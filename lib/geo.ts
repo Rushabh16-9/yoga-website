@@ -3,10 +3,13 @@ export async function detectUserLocation() {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
 
+        // Determine currency based on country code
+        const currency = data.country_code === 'IN' ? 'INR' : 'USD';
+
         return {
             country: data.country_name,
             countryCode: data.country_code,
-            currency: data.currency,
+            currency,
             timezone: data.timezone,
         };
     } catch (error) {

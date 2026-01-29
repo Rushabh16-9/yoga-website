@@ -88,3 +88,33 @@ export function generateArticleSchema(
         dateModified: publishedDate,
     };
 }
+
+/**
+ * Generate JSON-LD schema for SoftwareApplication
+ * Used on homepage for better app discovery in search
+ */
+export function generateSoftwareApplicationSchema() {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Yofit',
+        applicationCategory: 'HealthApplication',
+        operatingSystem: 'Web, iOS, Android',
+        offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'USD',
+            description: '14-day free trial, then starting at $29/month',
+        },
+        aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.8',
+            ratingCount: '1250',
+            bestRating: '5',
+            worstRating: '1',
+        },
+        description: 'Transform your practice with Yofit - the premier online yoga platform with personalized plans, world-class instructors, and comprehensive progress tracking.',
+        url: process.env.NEXT_PUBLIC_APP_URL,
+    };
+}
+

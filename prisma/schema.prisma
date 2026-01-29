@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -15,13 +15,24 @@ model User {
   firstName     String?
   lastName      String?
   imageUrl      String?
+  
+  // Personalization fields
+  goal          String?   // weight_loss, flexibility, strength, stress
+  level         String?   // beginner, intermediate, advanced, pro
+  dailyTime     Int?      // 15, 30, 60 (minutes)
+  bmi           Float?
+  weight        Float?
+  height        Float?
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
   // Relations
   subscription  Subscription?
+  preferences   UserPreferences?
   bookings      Booking[]
   progress      Progress[]
+  completedLessons CompletedLessons[]
   
   @@map("users")
 }
@@ -42,6 +53,8 @@ model Subscription {
   currentPeriodStart    DateTime
   currentPeriodEnd      DateTime
   cancelAtPeriodEnd     Boolean  @default(false)
+  trialEndsAt           DateTime?
+  currency              String   @default("USD") // USD, INR
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -57,6 +70,11 @@ model Class {
   duration      Int      // in minutes
   level         String   // beginner, intermediate, advanced, all
   category      String   // vinyasa, hatha, yin, etc.
+  goals         String   // JSON array: weight_loss, flexibility, strength, stress
+  isPremium     Boolean  @default(true)
+  difficulty    Int      @default(1) // 1-5 scale
+  caloriesBurn  Int?     // Estimated calories
+  equipment     String   @default("") // JSON array: Required equipment
   videoUrl      String
   thumbnailUrl  String
   
@@ -116,4 +134,32 @@ model PracticeStreak {
   updatedAt     DateTime @updatedAt
   
   @@map("practice_streaks")
+}
+
+model UserPreferences {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  injuries       String   @default("") // JSON array: List of injuries/limitations
+  preferredTime  String?  // morning, afternoon, evening
+  notifications  Boolean  @default(true)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@map("user_preferences")
+}
+
+model CompletedLessons {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classId         String
+  
+  completedAt     DateTime @default(now())
+  durationWatched Int      // Minutes actually watched
+  
+  @@unique([userId, classId])
+  @@map("completed_lessons")
 }

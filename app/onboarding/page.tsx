@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
+import LoadingState from "@/components/onboarding/LoadingState";
 
 export type OnboardingData = {
     goal: string;
@@ -14,6 +15,7 @@ export type OnboardingData = {
     age: number;
     height: number;
     weight: number;
+    dailyTime: number; // 15, 30, or 60 minutes
     injuries: string[];
 };
 
@@ -24,6 +26,7 @@ const initialData: OnboardingData = {
     age: 0,
     height: 0,
     weight: 0,
+    dailyTime: 0,
     injuries: [],
 };
 
@@ -49,6 +52,15 @@ const STEPS = [
         ]
     },
     {
+        id: "dailyTime",
+        title: "How much time can you dedicate daily?",
+        options: [
+            { id: "15", label: "15 Minutes", description: "Quick daily practice", icon: "⏱️" },
+            { id: "30", label: "30 Minutes", description: "Balanced routine", icon: "⏰", recommended: true },
+            { id: "60", label: "60 Minutes", description: "Deep practice", icon: "🕐" },
+        ]
+    },
+    {
         id: "measurements",
         title: "Let's personalize your plan",
         fields: ["gender", "age", "height", "weight"]
@@ -60,19 +72,25 @@ export default function OnboardingPage() {
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState<OnboardingData>(initialData);
     const [direction, setDirection] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleNext = () => {
         if (currentStep < STEPS.length - 1) {
             setDirection(1);
             setCurrentStep(prev => prev + 1);
         } else {
+            // Show loading state
+            setIsLoading(true);
+
             // Calculate BMI and generate plan
-            const bmi = data.weight / Math.pow(data.height / 100, 2);
-            const params = new URLSearchParams({
-                ...data as any,
-                bmi: bmi.toFixed(1)
-            });
-            router.push(`/onboarding/plan?${params.toString()}`);
+            setTimeout(() => {
+                const bmi = data.weight / Math.pow(data.height / 100, 2);
+                const params = new URLSearchParams({
+                    ...data as any,
+                    bmi: bmi.toFixed(1)
+                });
+                router.push(`/onboarding/plan?${params.toString()}`);
+            }, 2500); // Show loading for 2.5 seconds
         }
     };
 
@@ -85,11 +103,29 @@ export default function OnboardingPage() {
 
     const handleOptionSelect = (optionId: string) => {
         const stepId = STEPS[currentStep].id;
-        setData(prev => ({ ...prev, [stepId]: optionId }));
+
+        // Parse dailyTime as integer
+        if (stepId === "dailyTime") {
+            setData(prev => ({ ...prev, [stepId]: parseInt(optionId) }));
+        } else {
+            setData(prev => ({ ...prev, [stepId]: optionId }));
+        }
+
         handleNext(); // Auto advance on selection
     };
 
     const currentStepData = STEPS[currentStep];
+
+    // Show loading state after completing all steps
+    if (isLoading) {
+        return (
+            <div className="min-h-screen pt-24 pb-16 px-4 bg-gradient-to-br from-sage-50 to-cream-100">
+                <div className="max-w-2xl mx-auto">
+                    <LoadingState />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen pt-24 pb-16 px-4 bg-gradient-to-br from-sage-50 to-cream-100">
@@ -112,10 +148,13 @@ export default function OnboardingPage() {
                     <motion.div
                         key={currentStep}
                         custom={direction}
-                        initial={{ opacity: 0, x: direction > 0 ? 50 : -50 }}
+                        initial={{ opacity: 0, x: direction > 0 ? 100 : -100 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: direction > 0 ? -50 : 50 }}
-                        transition={{ duration: 0.3 }}
+                        exit={{ opacity: 0, x: direction > 0 ? -100 : 100 }}
+                        transition={{
+                            duration: 0.4,
+                            ease: [0.25, 0.1, 0.25, 1], // Custom cubic-bezier for smooth premium feel
+                        }}
                     >
                         <h1 className="text-3xl md:text-4xl font-bold font-display text-center mb-8">
                             {currentStepData.title}
@@ -170,8 +209,8 @@ export default function OnboardingPage() {
                                                     key={g}
                                                     onClick={() => setData(prev => ({ ...prev, gender: g }))}
                                                     className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${data.gender === g
-                                                            ? 'border-sage-500 bg-sage-50 text-sage-800 font-medium'
-                                                            : 'border-sage-200 text-sage-600 hover:border-sage-300'
+                                                        ? 'border-sage-500 bg-sage-50 text-sage-800 font-medium'
+                                                        : 'border-sage-200 text-sage-600 hover:border-sage-300'
                                                         }`}
                                                 >
                                                     {g}
@@ -231,6 +270,6 @@ export default function OnboardingPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

@@ -1,83 +1,85 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Lock } from "lucide-react";
+
+interface YogaClass {
+    id: string;
+    title: string;
+    instructorName: string;
+    duration: number;
+    level: string;
+    category: string;
+    thumbnailUrl: string;
+    description: string;
+    goals: string[];
+}
+
+interface TrialStatus {
+    subscription: any;
+    isTrialActive: boolean;
+    daysRemaining: number;
+}
 
 export default function ClassesPage() {
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedLevel, setSelectedLevel] = useState("all");
     const [selectedDuration, setSelectedDuration] = useState("all");
+    const [classes, setClasses] = useState<YogaClass[]>([]);
+    const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const classes = [
-        {
-            id: 1,
-            title: "Morning Flow",
-            instructor: "Sarah Chen",
-            duration: 45,
-            level: "beginner",
-            category: "Vinyasa",
-            image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80",
-            description: "Start your day with energizing sun salutations and gentle flows",
-        },
-        {
-            id: 2,
-            title: "Power Vinyasa",
-            instructor: "Michael Rodriguez",
-            duration: 60,
-            level: "intermediate",
-            category: "Vinyasa",
-            image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80",
-            description: "Build strength and stamina with dynamic sequences",
-        },
-        {
-            id: 3,
-            title: "Restorative Evening",
-            instructor: "Emma Thompson",
-            duration: 30,
-            level: "all",
-            category: "Restorative",
-            image: "https://images.unsplash.com/photo-1588286840104-8957b019727f?w=800&q=80",
-            description: "Unwind and relax with gentle poses and deep breathing",
-        },
-        {
-            id: 4,
-            title: "Yin Yoga Deep Stretch",
-            instructor: "Lisa Wang",
-            duration: 75,
-            level: "all",
-            category: "Yin",
-            image: "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=800&q=80",
-            description: "Hold poses longer to release deep tension and improve flexibility",
-        },
-        {
-            id: 5,
-            title: "Ashtanga Primary Series",
-            instructor: "Raj Patel",
-            duration: 90,
-            level: "advanced",
-            category: "Ashtanga",
-            image: "https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80",
-            description: "Traditional Ashtanga practice with synchronized breath and movement",
-        },
-        {
-            id: 6,
-            title: "Hatha Basics",
-            instructor: "Jennifer Lee",
-            duration: 45,
-            level: "beginner",
-            category: "Hatha",
-            image: "https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=800&q=80",
-            description: "Learn fundamental poses and proper alignment",
-        },
-    ];
+    useEffect(() => {
+        fetchTrialStatus();
+        fetchClasses();
+    }, []);
+
+    const fetchTrialStatus = async () => {
+        try {
+            const response = await fetch('/api/subscription/trial');
+            if (response.ok) {
+                const data = await response.json();
+                setTrialStatus(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch trial status:', err);
+        }
+    };
+
+    const fetchClasses = async () => {
+        try {
+            const response = await fetch('/api/classes');
+
+            if (response.status === 403) {
+                setError('subscription_required');
+                setLoading(false);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch classes');
+            }
+
+            const data = await response.json();
+            setClasses(data.classes || []);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filteredClasses = classes.filter((classItem) => {
         const matchesSearch =
             classItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            classItem.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+            classItem.instructorName.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesLevel =
             selectedLevel === "all" || classItem.level === selectedLevel;
         const matchesDuration =
@@ -89,9 +91,54 @@ export default function ClassesPage() {
         return matchesSearch && matchesLevel && matchesDuration;
     });
 
+    if (error === 'subscription_required') {
+        return (
+            <div className="min-h-screen pt-24 pb-16 px-4 flex items-center justify-center">
+                <Card className="p-8 text-center max-w-md">
+                    <Lock size={48} className="mx-auto mb-4 text-sage-500" />
+                    <h2 className="text-2xl font-bold text-sage-900 mb-4">Subscription Required</h2>
+                    <p className="text-sage-600 mb-6">
+                        Start your 14-day free trial to access our complete library of yoga classes.
+                    </p>
+                    <Button variant="primary" onClick={() => router.push('/pricing')}>
+                        Start Free Trial
+                    </Button>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen pt-24 pb-16 px-4">
             <div className="max-w-7xl mx-auto">
+                {/* Trial Status Banner */}
+                {trialStatus?.isTrialActive && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-6"
+                    >
+                        <Card variant="glass" className="p-4 bg-gradient-to-r from-terracotta-50 to-sage-50 border-terracotta-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <AlertCircle className="text-terracotta-600" size={20} />
+                                    <div>
+                                        <p className="font-semibold text-sage-900">
+                                            Free Trial Active
+                                        </p>
+                                        <p className="text-sm text-sage-600">
+                                            {trialStatus.daysRemaining} days remaining
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button variant="secondary" size="sm" onClick={() => router.push('/pricing')}>
+                                    Upgrade Now
+                                </Button>
+                            </div>
+                        </Card>
+                    </motion.div>
+                )}
+
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -145,52 +192,73 @@ export default function ClassesPage() {
                     </Card>
                 </motion.div>
 
+                {/* Loading State */}
+                {loading && (
+                    <div className="text-center py-12">
+                        <div className="w-16 h-16 border-4 border-sage-200 border-t-sage-500 rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-sage-600">Loading classes...</p>
+                    </div>
+                )}
+
+                {/* Error State */}
+                {error && error !== 'subscription_required' && (
+                    <div className="text-center py-12">
+                        <p className="text-xl text-sage-600">{error}</p>
+                    </div>
+                )}
+
                 {/* Results Count */}
-                <div className="mb-6 text-sage-700">
-                    Showing {filteredClasses.length} of {classes.length} classes
-                </div>
+                {!loading && !error && (
+                    <div className="mb-6 text-sage-700">
+                        Showing {filteredClasses.length} of {classes.length} classes
+                    </div>
+                )}
 
                 {/* Classes Grid */}
-                <div className="bento-grid">
-                    {filteredClasses.map((classItem, index) => (
-                        <motion.div
-                            key={classItem.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                        >
-                            <Card variant="glow" className="overflow-hidden h-full flex flex-col">
-                                <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
-                                    <img
-                                        src={classItem.image}
-                                        alt={classItem.title}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute top-2 left-2 bg-terracotta-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                        {classItem.category}
+                {!loading && !error && (
+                    <div className="bento-grid">
+                        {filteredClasses.map((classItem, index) => (
+                            <motion.div
+                                key={classItem.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                onClick={() => router.push(`/classes/${classItem.id}`)}
+                                className="cursor-pointer"
+                            >
+                                <Card variant="glow" className="overflow-hidden h-full flex flex-col hover:shadow-xl transition-shadow">
+                                    <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+                                        <img
+                                            src={classItem.thumbnailUrl}
+                                            alt={classItem.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute top-2 left-2 bg-terracotta-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                            {classItem.category}
+                                        </div>
+                                        <div className="absolute top-2 right-2 bg-sage-500 text-white px-3 py-1 rounded-full text-sm font-medium capitalize">
+                                            {classItem.level}
+                                        </div>
                                     </div>
-                                    <div className="absolute top-2 right-2 bg-sage-500 text-white px-3 py-1 rounded-full text-sm font-medium capitalize">
-                                        {classItem.level}
+                                    <div className="flex-1 px-4 pb-4">
+                                        <h3 className="text-2xl font-semibold mb-2">{classItem.title}</h3>
+                                        <p className="text-sage-600 mb-2">with {classItem.instructorName}</p>
+                                        <p className="text-sage-700 text-sm mb-4 line-clamp-2">{classItem.description}</p>
                                     </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-2xl font-semibold mb-2">{classItem.title}</h3>
-                                    <p className="text-sage-600 mb-2">with {classItem.instructor}</p>
-                                    <p className="text-sage-700 text-sm mb-4">{classItem.description}</p>
-                                </div>
-                                <div className="flex items-center justify-between mt-auto pt-4 border-t border-sage-100">
-                                    <span className="text-sage-700 font-medium">⏱ {classItem.duration} min</span>
-                                    <Button variant="primary" size="sm">
-                                        Start Class
-                                    </Button>
-                                </div>
-                            </Card>
-                        </motion.div>
-                    ))}
-                </div>
+                                    <div className="flex items-center justify-between mt-auto pt-4 px-4 pb-4 border-t border-sage-100">
+                                        <span className="text-sage-700 font-medium">⏱ {classItem.duration} min</span>
+                                        <Button variant="primary" size="sm">
+                                            Start Class
+                                        </Button>
+                                    </div>
+                                </Card>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
 
                 {/* No Results */}
-                {filteredClasses.length === 0 && (
+                {!loading && !error && filteredClasses.length === 0 && (
                     <div className="text-center py-12">
                         <p className="text-xl text-sage-600">
                             No classes found matching your criteria. Try adjusting your filters.

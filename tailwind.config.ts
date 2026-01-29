@@ -9,18 +9,18 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // Dopamine Color Palette - Modern Restorative Minimalism
+                // Zen-Modern Color Palette - Premium Minimalism
                 sage: {
-                    50: "#f6f8f6",
-                    100: "#e3ebe3",
-                    200: "#c7d7c7",
-                    300: "#a1bda1",
-                    400: "#7a9f7a",
-                    500: "#5d8a5d", // Primary sage green
-                    600: "#4a6f4a",
-                    700: "#3d5a3d",
-                    800: "#334933",
-                    900: "#2b3d2b",
+                    50: "#f4f6f4",
+                    100: "#e6ebe6",
+                    200: "#cdd7cc",
+                    300: "#a8baa7",
+                    400: "#7d9a7c",
+                    500: "#4A6741", // Primary sage green - Zen-Modern
+                    600: "#3d5435",
+                    700: "#32442b",
+                    800: "#283623",
+                    900: "#1f2b1c",
                 },
                 terracotta: {
                     50: "#fdf6f4",
@@ -28,19 +28,19 @@ const config: Config = {
                     200: "#f4d4c9",
                     300: "#ebb8a5",
                     400: "#e09376",
-                    500: "#d67456", // Primary terracotta
+                    500: "#d67456", // Accent terracotta
                     600: "#c45a3f",
                     700: "#a44834",
                     800: "#873d2f",
                     900: "#6f362a",
                 },
                 cream: {
-                    50: "#fdfcfb",
+                    50: "#FDFBF7", // Off-white background - Zen-Modern
                     100: "#faf8f5",
                     200: "#f5f1eb",
                     300: "#ede7dd",
                     400: "#e3d9ca",
-                    500: "#d9cab7", // Off-white/cream
+                    500: "#d9cab7",
                     600: "#c4b09a",
                     700: "#a8927a",
                     800: "#8a7762",
@@ -50,6 +50,7 @@ const config: Config = {
             fontFamily: {
                 sans: ["var(--font-inter)", "system-ui", "sans-serif"],
                 display: ["var(--font-outfit)", "system-ui", "sans-serif"],
+                serif: ["var(--font-lora)", "Georgia", "serif"], // Premium serif for headings
             },
             animation: {
                 "fade-in": "fadeIn 0.6s ease-out",

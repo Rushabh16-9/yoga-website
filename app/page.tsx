@@ -330,6 +330,19 @@ export default function HomePage() {
                     </motion.div>
                 </div>
             </section>
+
+            {/* Mobile-First Fixed Bottom CTA - Only visible on mobile */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-t from-white via-white to-transparent backdrop-blur-md border-t border-sage-200">
+                <Link href="/onboarding">
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full shadow-2xl bg-gradient-to-r from-sage-500 to-sage-600 hover:from-sage-600 hover:to-sage-700"
+                    >
+                        Start Practice →
+                    </Button>
+                </Link>
+            </div>
         </div>
     );
 }

@@ -4,11 +4,14 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useRouter } from "next/navigation";
 
 export default function PricingPage() {
+    const router = useRouter();
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
     const [currency, setCurrency] = useState("USD");
     const [currencySymbol, setCurrencySymbol] = useState("$");
+    const [activatingTrial, setActivatingTrial] = useState(false);
 
     useEffect(() => {
         // Detect user's country and set currency
@@ -37,6 +40,30 @@ export default function PricingPage() {
             return Math.round(usdPrice * 83); // Approximate conversion rate
         }
         return usdPrice;
+    };
+
+    const handleStartTrial = async (planName: string) => {
+        setActivatingTrial(true);
+        try {
+            const response = await fetch('/api/subscription/trial', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan: planName.toLowerCase() }),
+            });
+
+            if (response.ok) {
+                // Redirect to classes page
+                router.push('/classes');
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Failed to activate trial');
+            }
+        } catch (error) {
+            console.error('Trial activation error:', error);
+            alert('Failed to activate trial. Please try again.');
+        } finally {
+            setActivatingTrial(false);
+        }
     };
 
     const plans = [
@@ -113,8 +140,8 @@ export default function PricingPage() {
                         <button
                             onClick={() => setBillingCycle("monthly")}
                             className={`px-6 py-2 rounded-full transition-all ${billingCycle === "monthly"
-                                    ? "bg-sage-500 text-white"
-                                    : "text-sage-700 hover:text-sage-900"
+                                ? "bg-sage-500 text-white"
+                                : "text-sage-700 hover:text-sage-900"
                                 }`}
                         >
                             Monthly
@@ -122,8 +149,8 @@ export default function PricingPage() {
                         <button
                             onClick={() => setBillingCycle("yearly")}
                             className={`px-6 py-2 rounded-full transition-all ${billingCycle === "yearly"
-                                    ? "bg-sage-500 text-white"
-                                    : "text-sage-700 hover:text-sage-900"
+                                ? "bg-sage-500 text-white"
+                                : "text-sage-700 hover:text-sage-900"
                                 }`}
                         >
                             Yearly
@@ -201,8 +228,10 @@ export default function PricingPage() {
                                     variant={plan.popular ? "secondary" : "primary"}
                                     size="lg"
                                     className="w-full"
+                                    onClick={() => handleStartTrial(plan.name)}
+                                    disabled={activatingTrial}
                                 >
-                                    Start Free Trial
+                                    {activatingTrial ? 'Activating...' : 'Start Free Trial'}
                                 </Button>
                             </Card>
                         </motion.div>

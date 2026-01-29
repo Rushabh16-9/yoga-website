@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Outfit, Lora } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { generateSoftwareApplicationSchema } from "@/lib/seo";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -13,6 +14,12 @@ const inter = Inter({
 const outfit = Outfit({
     subsets: ["latin"],
     variable: "--font-outfit",
+    display: "swap",
+});
+
+const lora = Lora({
+    subsets: ["latin"],
+    variable: "--font-lora",
     display: "swap",
 });
 
@@ -77,8 +84,14 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+        <html lang="en" className={`${inter.variable} ${outfit.variable} ${lora.variable}`}>
             <body className="antialiased">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify(generateSoftwareApplicationSchema()),
+                    }}
+                />
                 <Navbar />
                 <main className="min-h-screen">{children}</main>
                 <Footer />
